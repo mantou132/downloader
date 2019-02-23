@@ -3,8 +3,10 @@
   "version": "0.0.1",
   "description": "js module manager",
   "module": "index.mjs",
+  "bin": {
+    "jsmm": "index.mjs"
+  },
   "scripts": {
-    "start": "node --experimental-modules --loader ./script/loader.mjs ./index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -23,6 +25,7 @@
     "prettier-eslint": "^8.8.2"
   },
   "dependencies": {
+    "colors": "^1.3.3",
     "commander": "^2.19.0",
     "puppeteer": "^1.12.2",
     "shelljs": "^0.8.3"

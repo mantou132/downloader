@@ -1,7 +1,8 @@
-#!/usr/bin/env node --experimental-modules --loader ./script/loader.mjs
+#!/usr/bin/env node --no-warnings --experimental-modules --loader ./script/loader.mjs
 
 import program from 'commander';
 import shell from 'shelljs';
+import colors from 'colors';
 import _fs from 'fs';
 import downloader from './downloader.mjs';
 import packageJson from './package.json';
@@ -49,5 +50,24 @@ program
       shell.rm('-rf', MODULE_INFO_FILE, MODULE_ROOT_DIR);
     }
   });
+
+program
+  .command('clean')
+  .description('clean javascript modules')
+  .action(async () => {
+    shell.rm('-rf', MODULE_INFO_FILE, MODULE_ROOT_DIR);
+  });
+
+if (!process.argv.slice(2).length) {
+  program.outputHelp(colors.red);
+}
+
+program.on('command:*', () => {
+  console.error(
+    colors.red('Invalid command: %s\nSee --help for a list of available commands.'),
+    program.args.join(' '),
+  );
+  process.exit(1);
+});
 
 program.parse(process.argv);
