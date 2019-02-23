@@ -1,0 +1,30 @@
+{
+  "name": "jsmm",
+  "version": "0.0.1",
+  "description": "js module manager",
+  "module": "index.mjs",
+  "scripts": {
+    "start": "node --experimental-modules --loader ./script/loader.mjs ./index.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "web",
+    "javascript",
+    "module",
+    "download"
+  ],
+  "author": "mt",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.14.1",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0",
+    "prettier-eslint": "^8.8.2"
+  },
+  "dependencies": {
+    "commander": "^2.19.0",
+    "puppeteer": "^1.12.2",
+    "shelljs": "^0.8.3"
+  }
+}
