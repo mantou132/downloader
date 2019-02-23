@@ -2,6 +2,8 @@ import puppeteer from 'puppeteer';
 import shell from 'shelljs';
 import ora from 'ora';
 import { URL } from 'url';
+import path from 'path';
+import replaceToRelative from './replace';
 
 const FETCH_COMPLETE = 'fetch complete';
 const FETCH_FAIL = 'fetch fail';
@@ -22,14 +24,13 @@ export default async function downloader(pkg, output) {
 
   let dir;
   page.on('response', async (res) => {
-    const { pathname } = new URL(res.url());
-    const matchResult = pathname.match(/(.*)\/[^/]*$/);
-    if (matchResult) {
-      const fullDir = `${output}${matchResult[1]}`;
-      dir = `${output}/${matchResult[0].split('/')[1]}`;
-      shell.mkdir('-p', fullDir);
-    }
-    shell.ShellString(await res.text()).to(`${output}${pathname}`);
+    const { pathname, search } = new URL(res.url());
+    const realPath = pathname + search;
+    const realFullPath = `${realPath}${realPath.endsWith('.js') ? '' : '.js'}`;
+    const { dir } = path.parse(realFullPath);
+    shell.mkdir('-p', `${output}${dir}`);
+
+    shell.ShellString(replaceToRelative(await res.text(), pathname)).to(`${output}${realFullPath}`);
   });
 
   await page.goto('about:blank', { waitUntil: 'load' });
