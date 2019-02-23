@@ -22,12 +22,26 @@ export default async function downloader(pkg, output) {
 
   const page = await browser.newPage();
 
-  let dir;
+  const dependencies = {};
   page.on('response', async (res) => {
     const { pathname, search } = new URL(res.url());
     const realPath = pathname + search;
+    const { dir, base } = path.parse(realPath);
     const realFullPath = `${realPath}${realPath.endsWith('.js') ? '' : '.js'}`;
-    const { dir } = path.parse(realFullPath);
+    const { base: main } = path.parse(realFullPath);
+    if (dir === '/') {
+      dependencies[base] = {
+        name: base,
+        main,
+        requires: [],
+      };
+      if (base !== pkg) {
+        dependencies[base].isIndirect = true;
+        const set = new Set(dependencies[pkg].requires);
+        set.add(base);
+        dependencies[pkg].requires = [...set];
+      }
+    }
     shell.mkdir('-p', `${output}${dir}`);
 
     shell.ShellString(replaceToRelative(await res.text(), pathname)).to(`${output}${realFullPath}`);
@@ -49,7 +63,7 @@ export default async function downloader(pkg, output) {
     page.on('console', async (msg) => {
       if (msg.text() === FETCH_COMPLETE) {
         await browser.close();
-        resolve({ dir });
+        resolve(dependencies);
         spinner.stop();
         spinner.succeed(`installed ${pkg}`);
       }

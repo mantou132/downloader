@@ -1,4 +1,4 @@
-#!/usr/bin/env node --no-warnings --experimental-modules
+#!/usr/bin/env node --experimental-modules
 
 import program from 'commander';
 import shell from 'shelljs';
@@ -21,7 +21,7 @@ const createModuleJSON = () => {
 program.version(packageJson.version, '-v, --version');
 
 program
-  .command('install <pkg>')
+  .command('install [<pkg>]')
   .alias('i')
   .description('install javascript modules')
   .action(async (pkg) => {
@@ -31,21 +31,54 @@ program
     } catch {
       moduleInfo = createModuleJSON();
     }
-    shell.mkdir('-p', MODULE_ROOT_DIR);
-    const info = await downloader(pkg, MODULE_ROOT_DIR);
-    moduleInfo[pkg] = info;
-    shell.ShellString(JSON.stringify(moduleInfo, null, 2)).to(MODULE_INFO_FILE);
+    const installPkg = async (name) => {
+      shell.mkdir('-p', MODULE_ROOT_DIR);
+      Object.assign(moduleInfo, await downloader(name, MODULE_ROOT_DIR));
+      shell.ShellString(JSON.stringify(moduleInfo, null, 2)).to(MODULE_INFO_FILE);
+    };
+    if (pkg) {
+      installPkg(pkg);
+    } else {
+      let promise = Promise.resolve();
+      Object.values(moduleInfo).forEach(async ({ name, isIndirect }) => {
+        if (!isIndirect) promise = promise.then(() => installPkg(name));
+      });
+    }
   });
 
 program
   .command('uninstall <pkg>')
   .description('uninstall javascript modules')
   .action(async (pkg) => {
-    shell.rm(`${MODULE_ROOT_DIR}/${pkg}`);
     const moduleInfo = JSON.parse(await fs.readFile(MODULE_INFO_FILE, 'utf8'));
-    shell.rm('-rf', moduleInfo[pkg].dir);
-    delete moduleInfo[pkg];
+    // const files = await fs.readdir(MODULE_ROOT_DIR);
+
+    if (!moduleInfo[pkg] || moduleInfo[pkg].isIndirect) {
+      console.error(colors.red('You did not install the module directly'));
+      process.exit(1);
+      return;
+    }
+
+    console.warn(colors.yellow('warn: Cannot delete file from js_modules'));
+
+    const removeModule = (jsm) => {
+      const canRemove = !Object.values(moduleInfo).find(
+        ({ name, requires }) => name !== pkg && requires.includes(jsm),
+      );
+      moduleInfo[jsm].requires.forEach(removeModule);
+      if (canRemove) {
+        shell.rm(`${MODULE_ROOT_DIR}/${moduleInfo[jsm].main}`);
+        // Tricky
+        // const dir = files.find(name => new RegExp(`:${moduleInfo[jsm].name}@`).test(name));
+        // shell.rm('-rf', `${MODULE_ROOT_DIR}${dir}`);
+        delete moduleInfo[jsm];
+      }
+    };
+
+    removeModule(pkg);
+
     shell.ShellString(JSON.stringify(moduleInfo, null, 2)).to(MODULE_INFO_FILE);
+
     if (!Object.keys(moduleInfo).length) {
       shell.rm('-rf', MODULE_INFO_FILE, MODULE_ROOT_DIR);
     }
@@ -53,7 +86,7 @@ program
 
 program
   .command('clean')
-  .description('clean javascript modules')
+  .description('remove all javascript modules')
   .action(async () => {
     shell.rm('-rf', MODULE_INFO_FILE, MODULE_ROOT_DIR);
   });
