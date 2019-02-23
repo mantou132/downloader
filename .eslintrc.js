@@ -19,6 +19,7 @@ module.exports = {
   extends: [/* 'eslint:recommended',*/ 'airbnb-base'],
   // https://eslint.org/docs/rules/
   rules: {
+    'no-console': 0,
     'import/extensions': 0,
     'no-param-reassign': 0,
     'no-use-before-define': 1,

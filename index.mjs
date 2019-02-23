@@ -1,4 +1,4 @@
-#!/usr/bin/env node --no-warnings --experimental-modules --loader ./script/loader.mjs
+#!/usr/bin/env node --no-warnings --experimental-modules
 
 import program from 'commander';
 import shell from 'shelljs';
