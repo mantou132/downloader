@@ -3,7 +3,7 @@ import shell from 'shelljs';
 import ora from 'ora';
 import { URL } from 'url';
 import path from 'path';
-import replaceToRelative from './replace';
+import replaceToRelative from './replace.mjs';
 
 const FETCH_COMPLETE = 'fetch complete';
 const FETCH_FAIL = 'fetch fail';

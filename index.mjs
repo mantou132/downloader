@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-modules
+#!/usr/bin/env node --experimental-modules --experimental-json-modules
 
 import program from 'commander';
 import shell from 'shelljs';
